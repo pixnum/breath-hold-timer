@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breath-Hold Timer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .centered {
+      text-align: center;
+      padding: 20px;
+    }
+    input, select, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #countdown-display {
+      font-size: 3em;
+      margin: 20px;
+    }
+    .lung {
+      width: 100px;
+      height: 100px;
+      margin: 20px auto;
+      background: radial-gradient(circle, #00f0ff 30%, transparent 70%);
+      border-radius: 50%;
+      animation: breath 4s ease-in-out infinite;
+    }
+    @keyframes breath {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.5); }
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="centered">
+    <h1 id="app-name">Breath-Hold Timer</h1>
+
+    <!-- Language selector -->
+    <select id="language-select">
+      <option value="en">English</option>
+     
+    </select>
+
+    <!-- Input for custom target time -->
+    <input type="number" id="target-time" placeholder="Set time in seconds" />
+
+    <!-- Controls -->
+    <button id="prep-button">Start Breathing Prep</button>
+    <button id="hold-button">Start Breath-Hold</button>
+    <button id="reset-button">Reset</button>
+
+    <div id="countdown-display">00:00</div>
+
+    <!-- Lung animation -->
+    <div id="lung-animation" class="lung"></div>
+
+    <footer>© Manik Roy 2025</footer>
+  </div>
+
+  <!-- Ambient Background Music -->
+  <audio id="bg-music" src="ambient.mp3" autoplay loop></audio>
+
+  <script>
+    const countdownDisplay = document.getElementById('countdown-display');
+    const targetTimeInput = document.getElementById('target-time');
+    const holdButton = document.getElementById('hold-button');
+    const prepButton = document.getElementById('prep-button');
+    const resetButton = document.getElementById('reset-button');
+    const languageSelect = document.getElementById('language-select');
+    const bgMusic = document.getElementById('bg-music');
+
+    let interval, currentTime = 0;
+    const translations = {
+      en: {
+        start: "Hold your breath",
+        halfway: "Halfway there",
+        done: "You can breathe now",
+        prep1: "Inhale for 4 seconds",
+        prep2: "Hold for 7 seconds",
+        prep3: "Exhale for 8 seconds"
+      },
+     
+    };
+
+    function getText(key) {
+      const lang = languageSelect.value;
+      return translations[lang][key] || translations.en[key];
+    }
+
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = languageSelect.value;
+      speechSynthesis.speak(utter);
+    }
+
+    function updateDisplay(seconds) {
+      const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const s = String(seconds % 60).padStart(2, '0');
+      countdownDisplay.textContent = `${m}:${s}`;
+    }
+
+    function startBreathingPrep() {
+      speak(getText("prep1"));
+      setTimeout(() => speak(getText("prep2")), 4000);
+      setTimeout(() => speak(getText("prep3")), 11000);
+    }
+
+    function startBreathHold() {
+      let target = parseInt(targetTimeInput.value) || 60;
+      currentTime = target;
+      updateDisplay(currentTime);
+      speak(getText("start"));
+      interval = setInterval(() => {
+        currentTime--;
+        updateDisplay(currentTime);
+        if (currentTime === Math.floor(target / 2)) speak(getText("halfway"));
+        if (currentTime <= 0) {
+          clearInterval(interval);
+          speak(getText("done"));
+        }
+      }, 1000);
+    }
+
+    prepButton.addEventListener('click', startBreathingPrep);
+    holdButton.addEventListener('click', startBreathHold);
+    resetButton.addEventListener('click', () => {
+      clearInterval(interval);
+      updateDisplay(0);
+      speechSynthesis.cancel();
+    });
+
+    // Optional: Auto fullscreen during hold
+    holdButton.addEventListener('click', () => {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    });
+
+    // Resume music if browser blocks autoplay
+    window.addEventListener('click', () => {
+      bgMusic.play().catch(() => {});
+    });
+
+    // Initial display
+    updateDisplay(0);
+  </script>
+</body>
+</html>
