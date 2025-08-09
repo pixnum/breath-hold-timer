@@ -1,2 +1,2 @@
-# breath-hold-timer
+# Breath-Hold-Timer
 Breath Hold Timer for Your Lungs
